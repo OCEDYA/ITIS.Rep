@@ -1,0 +1,61 @@
+namespace Recognizer;
+
+public static class ThresholdFilterTask
+{
+    public static double[,] ThresholdFilter(double[,] original, double whitePixelsFraction)
+    {
+        var width = original.GetLength(0);
+        var height = original.GetLength(1);
+        var totalPixels = width * height;
+		var requiredWhitePixels = (int)(whitePixelsFraction * totalPixels);
+
+        if (requiredWhitePixels == 0)
+        {
+            return new double[width, height];
+        }
+        
+        double[] allValues = new double[totalPixels];
+        var index = 0;
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                allValues[index++] = original[x, y];
+            }
+        }
+        
+        for (int i = 0; i < totalPixels - 1; i++)
+        {
+            for (int j = i + 1; j < totalPixels; j++)
+            {
+                if (allValues[i] > allValues[j])
+                {
+                    var temp = allValues[i];
+                    allValues[i] = allValues[j];
+                    allValues[j] = temp;
+                }
+            }
+        }
+        
+        double threshold;
+        if (requiredWhitePixels == totalPixels)
+        {
+            threshold = allValues[0] - 0.001;
+        }
+        else
+        {
+            threshold = allValues[totalPixels - requiredWhitePixels];
+        }
+        
+        double[,] result = new double[width, height];
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                result[x, y] = original[x, y] >= threshold ? 1.0 : 0.0;
+            }
+        }
+        
+        return result;
+    }
+}
